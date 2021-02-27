@@ -1,1 +1,1 @@
-# jax-cv
+# cvax
