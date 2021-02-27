@@ -1,3 +1,11 @@
+# toru34
+.DS_Store
+*.JPEG
+*.jpg
+*.csv
+*.txt
+sandbox*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
