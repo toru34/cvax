@@ -7,14 +7,9 @@ from PIL import Image
 from cvax import config
 
 class Imagenette:
-
-    def __init__(self,
-        split: Literal['train', 'val', 'test'],
-        image_size: Union[int, tuple[int, int]],
-        ):
+    def __init__(self, split: Literal['train', 'val', 'test'], image_size: Union[int, tuple[int, int]]):
         """
         """
-
         self.image_paths = []
         self.labels = []
 
@@ -24,15 +19,17 @@ class Imagenette:
 
         data_dir = config.DATASET_DIR / f"imagenette2/{split}"
 
-        self._class_ids = sorted([p.stem for p in data_dir.glob('n0*')])
+        self.names = sorted([p.stem for p in data_dir.glob('n0*')])
+        self.ids = [id_ for id_ in range(len(self.names))]
+        self.id2name = {id_: name for id_, name in enumerate(self.names)}
         
-        for _class_id in self._class_ids:
-            _class_dir = data_dir / _class_id
+        for id_, name in sorted(self.id2name.items(), key=lambda x: x[0]):
+            image_dir = data_dir / name
 
-            _image_paths = sorted(_class_dir.glob("*.JPEG"))
+            image_paths = sorted(image_dir.glob("*.JPEG"))
 
-            self.image_paths += _image_paths
-            self.labels += len(_image_paths) * [_class_id]
+            self.image_paths += image_paths
+            self.labels += len(image_paths) * [id_]
 
 
     def __getitem__(self, i):
@@ -49,4 +46,4 @@ class Imagenette:
 
     @staticmethod
     def _download():
-        pass
+        raise NotImplementedError

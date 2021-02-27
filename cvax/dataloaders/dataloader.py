@@ -10,18 +10,19 @@ class DataLoader:
     
     def __iter__(self):
         self.pointer = 0
+        # TODO: Shuffle dataset
         return self
     
     def __next__(self):
         if self.pointer < len(self.dataset):
 
-            batch_images, batch_labels = zip(*[self.dataset[i] for i in range(self.pointer, self.pointer+self.batch_size)])
+            images, labels = zip(*[self.dataset[i] for i in range(self.pointer, self.pointer+self.batch_size)])
             
-            batch_images = np.array(batch_images)
-            batch_labels = np.array(batch_labels)
+            images = np.array(images)
+            labels = np.array(labels)
 
             self.pointer += self.batch_size
 
-            return batch_images, batch_labels
+            return images, labels
         else:
             raise StopIteration
