@@ -69,7 +69,7 @@ class BottleneckBlock(Module):
             self.conv_proj = Conv2d(rng, (out_channels, in_channels, 1, 1), stride=in_stride)
             self.bn_proj = BatchNorm2d(out_channels)
 
-        self.conv_in = Conv2d(rng, (bt_channels, in_channels, 1, 1))
+        self.conv_in = Conv2d(rng, (bt_channels, in_channels, 1, 1), stride=in_stride)
         self.bn_in = BatchNorm2d(bt_channels)
 
         self.conv_bt = Conv2d(rng, (bt_channels, bt_channels, 3, 3))
@@ -99,50 +99,6 @@ class BottleneckBlock(Module):
         return x
 
 
-class ResBlock(Module):
-    def __init__(self,
-        rng,
-        kernel_shape_tuple: tuple[tuple[int, int, int, int], ...],
-        use_proj=False,
-        halve_resolution=False,
-        ):
-
-        self.use_proj = use_proj
-        self.halve_resolution = halve_resolution
-
-        if self.use_proj or self.halve_resolution:
-            in_channels = kernel_shape_tuple[0][1]
-            out_channels = kernel_shape_tuple[-1][0]
-            stride = 2 if self.halve_resolution else 1
-            
-            self.conv_proj = Conv2d(rng, (out_channels, in_channels, 1, 1), stride=stride)
-            self.bn_proj = BatchNorm2d(out_channels)
-        
-        for i, kernel_shape in enumerate(kernel_shape_tuple):
-            stride = 2 if i == 0 and self.halve_resolution else 1
-            self.add_module(f'conv{i}', Conv2d(rng, kernel_shape, stride=stride))
-            self.add_module(f'bn{i}', BatchNorm2d(kernel_shape[0]))
-        
-        self.n_convs = len(kernel_shape_tuple)
-        
-    def forward(self, x):
-        residual = x
-        if self.use_proj or self.halve_resolution:
-            residual = self.conv_proj(residual)
-            residual = self.bn_proj(residual)
-        
-        for i in range(self.n_convs):
-            x = getattr(self, f'conv{i}')(x)
-            x = getattr(self, f'bn{i}')(x)
-
-            if i == self.n_convs - 1:
-                x += residual
-            
-            x = nn.relu(x)
-        
-        return x
-
-
 class ResStage(Module):
     def __init__(self,
         *resblock_tuple,
@@ -156,93 +112,82 @@ class ResStage(Module):
 
 
 class ResNet50(Module):
-
+    
     stem: Module
 
+    stage1_bt1: Module
+    stage1_bt2: Module
+    stage1_bt3: Module
+
+    stage2_bt1: Module
+    stage2_bt2: Module
+    stage2_bt3: Module
+    stage2_bt4: Module
+
+    stage3_bt1: Module
+    stage3_bt2: Module
+    stage3_bt3: Module
+    stage3_bt4: Module
+    stage3_bt5: Module
+    stage3_bt6: Module
+
+    stage4_bt1: Module
+    stage4_bt2: Module
+    stage4_bt3: Module
+
+    head: Module
+
     def __init__(self,
-        rng
+        rng,
         ):
-        self.stem = ResStem(rng, (64, 3, 7, 7), stride=2) # TODO: Change rng
 
-        self.stage1 = ResStage(
-            ResBlock(rng, (
-                (64, 64, 1, 1),
-                (64, 64, 3, 3),
-                (256, 64, 1, 1)), use_proj=True),
-            ResBlock(rng, (
-                (64, 256, 1, 1),
-                (64, 64, 3, 3),
-                (256, 64, 1, 1))),
-            ResBlock(rng, (
-                (64, 256, 1, 1),
-                (64, 64, 3, 3),
-                (256, 64, 1, 1))))
+        self.stem = ResStem(rng, (64, 3, 7, 7), stride=2)
 
-        self.stage2 = ResStage(
-            ResBlock(rng, (
-                (128, 256, 1, 1),
-                (128, 128, 3, 3),
-                (512, 128, 1, 1)), halve_resolution=True),
-            ResBlock(rng, (
-                (128, 512, 1, 1),
-                (128, 128, 3, 3),
-                (512, 128, 1, 1))),
-            ResBlock(rng, (
-                (128, 512, 1, 1),
-                (128, 128, 3, 3),
-                (512, 128, 1, 1))),
-            ResBlock(rng, (
-                (128, 512, 1, 1),
-                (128, 128, 3, 3),
-                (512, 128, 1, 1))))
-        
-        self.stage3 = ResStage(
-            ResBlock(rng, (
-                (256, 512, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1)), halve_resolution=True),
-            ResBlock(rng, (
-                (256, 1024, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1))),
-            ResBlock(rng, (
-                (256, 1024, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1))),
-            ResBlock(rng, (
-                (256, 1024, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1))),
-            ResBlock(rng, (
-                (256, 1024, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1))),
-            ResBlock(rng, (
-                (256, 1024, 1, 1),
-                (256, 256, 3, 3),
-                (1024, 256, 1, 1))))
-        
-        self.stage4 = ResStage(
-            ResBlock(rng, (
-                (512, 1024, 1, 1),
-                (512, 512, 3, 3),
-                (2048, 512, 1, 1)), halve_resolution=True),
-            ResBlock(rng, (
-                (512, 2048, 1, 1),
-                (512, 512, 3, 3),
-                (2048, 512, 1, 1))),
-            ResBlock(rng, (
-                (512, 2048, 1, 1),
-                (512, 512, 3, 3),
-                (2048, 512, 1, 1))))
-        
+        self.stage1_bt1 = BottleneckBlock(rng, 64, 64, 256)
+        self.stage1_bt2 = BottleneckBlock(rng, 256, 64, 256)
+        self.stage1_bt3 = BottleneckBlock(rng, 256, 64, 256)
+
+        self.stage2_bt1 = BottleneckBlock(rng, 256, 128, 512, in_stride=2)
+        self.stage2_bt2 = BottleneckBlock(rng, 512, 128, 512)
+        self.stage2_bt3 = BottleneckBlock(rng, 512, 128, 512)
+        self.stage2_bt4 = BottleneckBlock(rng, 512, 128, 512)
+
+        self.stage3_bt1 = BottleneckBlock(rng, 512, 256, 1024, in_stride=2)
+        self.stage3_bt2 = BottleneckBlock(rng, 1024, 256, 1024)
+        self.stage3_bt3 = BottleneckBlock(rng, 1024, 256, 1024)
+        self.stage3_bt4 = BottleneckBlock(rng, 1024, 256, 1024)
+        self.stage3_bt5 = BottleneckBlock(rng, 1024, 256, 1024)
+        self.stage3_bt6 = BottleneckBlock(rng, 1024, 256, 1024)
+
+        self.stage4_bt1 = BottleneckBlock(rng, 1024, 512, 2048, in_stride=2)
+        self.stage4_bt2 = BottleneckBlock(rng, 2048, 512, 2048)
+        self.stage4_bt3 = BottleneckBlock(rng, 2048, 512, 2048)
+
         self.head = ResHead(rng, 2048, 1000)
-
+    
     def forward(self, x):
-        x = self.stem(x) # (N, 64, 112, 112)
-        x = self.stage1(x) # (N, 256, 56, 56)
-        x = self.stage2(x) # (N, 512, 28, 28)
-        x = self.stage3(x) # (N, 1024, 14, 14)
-        x = self.stage4(x) # (N, 2048, 7, 7)
-        x = self.head(x) # (N, 1000)
+        x = self.stem(x)
+
+        x = self.stage1_bt1(x)
+        x = self.stage1_bt2(x)
+        x = self.stage1_bt3(x)
+
+        x = self.stage2_bt1(x)
+        x = self.stage2_bt2(x)
+        x = self.stage2_bt3(x)
+        x = self.stage2_bt4(x)
+
+        x = self.stage3_bt1(x)
+        x = self.stage3_bt2(x)
+        x = self.stage3_bt3(x)
+        x = self.stage3_bt4(x)
+        x = self.stage3_bt5(x)
+        x = self.stage3_bt6(x)
+
+        x = self.stage4_bt1(x)
+        x = self.stage4_bt2(x)
+        x = self.stage4_bt3(x)
+
+        x = self.head(x)
+
         return x
