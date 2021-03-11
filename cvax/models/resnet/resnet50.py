@@ -41,6 +41,64 @@ class ResHead(Module):
         return x
 
 
+class BottleneckBlock(Module):
+
+    conv_proj: Module
+    bn_proj: Module
+    
+    conv_in: Module
+    bn_in: Module
+
+    conv_bt: Module
+    bn_bt: Module
+
+    conv_out: Module
+    bn_out: Module
+
+    def __init__(self,
+        rng,
+        in_channels: int,
+        bt_channels: int,
+        out_channels: int,
+        in_stride: int = 1,
+        ):
+
+        self.use_proj = (in_channels != out_channels or in_stride != 1)
+        
+        if self.use_proj:
+            self.conv_proj = Conv2d(rng, (out_channels, in_channels, 1, 1), stride=in_stride)
+            self.bn_proj = BatchNorm2d(out_channels)
+
+        self.conv_in = Conv2d(rng, (bt_channels, in_channels, 1, 1))
+        self.bn_in = BatchNorm2d(bt_channels)
+
+        self.conv_bt = Conv2d(rng, (bt_channels, bt_channels, 3, 3))
+        self.bn_bt = BatchNorm2d(bt_channels)
+
+        self.conv_out = Conv2d(rng, (out_channels, bt_channels, 1, 1))
+        self.bn_out = BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        residual = x
+        if self.use_proj:
+            residual = self.conv_proj(residual)
+            residual = self.bn_proj(residual)
+        
+        x = self.conv_in(x)
+        x = self.bn_in(x)
+        x = nn.relu(x)
+
+        x = self.conv_bt(x)
+        x = self.bn_bt(x)
+        x = nn.relu(x)
+
+        x = self.conv_out(x)
+        x = self.bn_out(x)
+        x = nn.relu(x + residual)
+
+        return x
+
+
 class ResBlock(Module):
     def __init__(self,
         rng,
