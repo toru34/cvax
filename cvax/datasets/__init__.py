@@ -1,1 +1,1 @@
-from cvax.datasets.imagenette import Imagenette
+from cvax.datasets.imagenet import ImageNet

@@ -6,7 +6,7 @@ from PIL import Image
 
 from cvax import config
 
-class Imagenette:
+class ImageNet:
     def __init__(self, split: Literal['train', 'val', 'test'], image_size: Union[int, tuple[int, int]]):
         """
         """
