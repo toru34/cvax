@@ -4,20 +4,20 @@ from nmax import Module, ModuleTuple
 from cvax.models.resnet.blocks import ResStem, ResHead, BottleneckBlock
 
 
-class ResNet50(Module):
-    
+class ResNet101(Module):
+
     stem: Module
 
     stage1: Module
     stage2: Module
     stage3: Module
     stage4: Module
-    
+
     head: Module
 
     def __init__(self, rng, out_dim: int = 1000):
 
-        rngs = jax.random.split(rng, num=18)
+        rngs = jax.random.split(rng, num=35)
 
         self.stem = ResStem(rngs[0], (64, 3, 7, 7), stride=2)
 
@@ -41,15 +41,32 @@ class ResNet50(Module):
             BottleneckBlock(rngs[11], 1024, 256, 1024),
             BottleneckBlock(rngs[12], 1024, 256, 1024),
             BottleneckBlock(rngs[13], 1024, 256, 1024),
+            BottleneckBlock(rngs[14], 1024, 256, 1024),
+            BottleneckBlock(rngs[15], 1024, 256, 1024),
+            BottleneckBlock(rngs[16], 1024, 256, 1024),
+            BottleneckBlock(rngs[17], 1024, 256, 1024),
+            BottleneckBlock(rngs[18], 1024, 256, 1024),
+            BottleneckBlock(rngs[19], 1024, 256, 1024),
+            BottleneckBlock(rngs[20], 1024, 256, 1024),
+            BottleneckBlock(rngs[21], 1024, 256, 1024),
+            BottleneckBlock(rngs[22], 1024, 256, 1024),
+            BottleneckBlock(rngs[23], 1024, 256, 1024),
+            BottleneckBlock(rngs[24], 1024, 256, 1024),
+            BottleneckBlock(rngs[25], 1024, 256, 1024),
+            BottleneckBlock(rngs[26], 1024, 256, 1024),
+            BottleneckBlock(rngs[27], 1024, 256, 1024),
+            BottleneckBlock(rngs[28], 1024, 256, 1024),
+            BottleneckBlock(rngs[29], 1024, 256, 1024),
+            BottleneckBlock(rngs[30], 1024, 256, 1024),
         ))
 
         self.stage4 = ModuleTuple((
-            BottleneckBlock(rngs[14], 1024, 512, 2048, in_stride=2),
-            BottleneckBlock(rngs[15], 2048, 512, 2048),
-            BottleneckBlock(rngs[16], 2048, 512, 2048),
+            BottleneckBlock(rngs[31], 1024, 512, 2048, in_stride=2),
+            BottleneckBlock(rngs[32], 2048, 512, 2048),
+            BottleneckBlock(rngs[33], 2048, 512, 2048),
         ))
 
-        self.head = ResHead(rngs[17], 2048, out_dim)
+        self.head = ResHead(rngs[34], 2048, out_dim)
     
     def forward(self, x):
         x = self.stem(x)
