@@ -3,6 +3,7 @@ from typing import Literal
 
 import jax
 import jax.numpy as jnp
+import jax.nn.initializers as init
 
 from nmax import Module, Parameter
 
@@ -18,8 +19,9 @@ class Conv2d(Module):
         padding: Literal["VALID", "SAME"] = "SAME",
         use_bias: bool = True,
         ):
-        self.W = jax.random.normal(rng, kernel_shape) # TODO
-        
+        # self.W = jax.random.normal(rng, kernel_shape) # TODO
+        self.W = init.he_normal()(rng, kernel_shape) # TODO
+
         self.use_bias = use_bias
         if self.use_bias:
             self.b = jnp.zeros((1, kernel_shape[0], 1, 1))

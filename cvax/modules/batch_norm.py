@@ -18,10 +18,10 @@ class BatchNorm2d(Module):
         self.var = jnp.ones((1, n_channels, 1, 1))
     
     def forward(self, x):
-        if self.mode == 'eval':
+        if self._mode == 'eval':
             x_mean = self.mean
             x_var = self.var
-        elif self.mode == 'train':
+        elif self._mode == 'train':
             x_mean = jnp.mean(x, axis=(0, 2, 3), keepdims=True)
             x_var = jnp.var(x, axis=(0, 2, 3), keepdims=True)
 

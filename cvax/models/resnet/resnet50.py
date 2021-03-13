@@ -2,7 +2,7 @@ import jax
 import jax.nn as nn
 import jax.numpy as jnp
 
-from nmax import Module
+from nmax import Module, ModuleTuple
 from cvax.modules import Dense, Conv2d, MaxPool2d, BatchNorm2d
 
 
@@ -63,19 +63,21 @@ class BottleneckBlock(Module):
         in_stride: int = 1,
         ):
 
+        rngs = jax.random.split(rng, num=4)
+
         self.use_proj = (in_channels != out_channels or in_stride != 1)
         
         if self.use_proj:
-            self.conv_proj = Conv2d(rng, (out_channels, in_channels, 1, 1), stride=in_stride)
+            self.conv_proj = Conv2d(rngs[0], (out_channels, in_channels, 1, 1), stride=in_stride)
             self.bn_proj = BatchNorm2d(out_channels)
 
-        self.conv_in = Conv2d(rng, (bt_channels, in_channels, 1, 1), stride=in_stride)
+        self.conv_in = Conv2d(rngs[1], (bt_channels, in_channels, 1, 1), stride=in_stride)
         self.bn_in = BatchNorm2d(bt_channels)
 
-        self.conv_bt = Conv2d(rng, (bt_channels, bt_channels, 3, 3))
+        self.conv_bt = Conv2d(rngs[2], (bt_channels, bt_channels, 3, 3))
         self.bn_bt = BatchNorm2d(bt_channels)
 
-        self.conv_out = Conv2d(rng, (out_channels, bt_channels, 1, 1))
+        self.conv_out = Conv2d(rngs[3], (out_channels, bt_channels, 1, 1))
         self.bn_out = BatchNorm2d(out_channels)
 
     def forward(self, x):
@@ -99,94 +101,63 @@ class BottleneckBlock(Module):
         return x
 
 
-class ResStage(Module):
-    def __init__(self,
-        *resblock_tuple,
-        ):
-        self.resblock_tuple = tuple(resblock_tuple)
-    
-    def forward(self, x):
-        for resblock in self.resblock_tuple:
-            x = resblock(x)
-        return x
-
-
 class ResNet50(Module):
     
     stem: Module
 
-    stage1_bt1: Module
-    stage1_bt2: Module
-    stage1_bt3: Module
-
-    stage2_bt1: Module
-    stage2_bt2: Module
-    stage2_bt3: Module
-    stage2_bt4: Module
-
-    stage3_bt1: Module
-    stage3_bt2: Module
-    stage3_bt3: Module
-    stage3_bt4: Module
-    stage3_bt5: Module
-    stage3_bt6: Module
-
-    stage4_bt1: Module
-    stage4_bt2: Module
-    stage4_bt3: Module
+    stage1: Module
+    stage2: Module
+    stage3: Module
+    stage4: Module
 
     head: Module
 
     def __init__(self,
         rng,
+        out_dim: int = 1000,
         ):
 
-        self.stem = ResStem(rng, (64, 3, 7, 7), stride=2)
+        rngs = jax.random.split(rng, num=28)
 
-        self.stage1_bt1 = BottleneckBlock(rng, 64, 64, 256)
-        self.stage1_bt2 = BottleneckBlock(rng, 256, 64, 256)
-        self.stage1_bt3 = BottleneckBlock(rng, 256, 64, 256)
+        self.stem = ResStem(rngs[0], (64, 3, 7, 7), stride=2)
 
-        self.stage2_bt1 = BottleneckBlock(rng, 256, 128, 512, in_stride=2)
-        self.stage2_bt2 = BottleneckBlock(rng, 512, 128, 512)
-        self.stage2_bt3 = BottleneckBlock(rng, 512, 128, 512)
-        self.stage2_bt4 = BottleneckBlock(rng, 512, 128, 512)
+        self.stage1 = ModuleTuple((
+            BottleneckBlock(rngs[1], 64, 64, 256),
+            BottleneckBlock(rngs[2], 256, 64, 256),
+            BottleneckBlock(rngs[3], 256, 64, 256),
+        ))
 
-        self.stage3_bt1 = BottleneckBlock(rng, 512, 256, 1024, in_stride=2)
-        self.stage3_bt2 = BottleneckBlock(rng, 1024, 256, 1024)
-        self.stage3_bt3 = BottleneckBlock(rng, 1024, 256, 1024)
-        self.stage3_bt4 = BottleneckBlock(rng, 1024, 256, 1024)
-        self.stage3_bt5 = BottleneckBlock(rng, 1024, 256, 1024)
-        self.stage3_bt6 = BottleneckBlock(rng, 1024, 256, 1024)
+        self.stage2 = ModuleTuple((
+            BottleneckBlock(rngs[4], 256, 128, 512, in_stride=2),
+            BottleneckBlock(rngs[5], 512, 128, 512),
+            BottleneckBlock(rngs[6], 512, 128, 512),
+            BottleneckBlock(rngs[7], 512, 128, 512),
+        ))
 
-        self.stage4_bt1 = BottleneckBlock(rng, 1024, 512, 2048, in_stride=2)
-        self.stage4_bt2 = BottleneckBlock(rng, 2048, 512, 2048)
-        self.stage4_bt3 = BottleneckBlock(rng, 2048, 512, 2048)
+        self.stage3 = ModuleTuple((
+            BottleneckBlock(rngs[8], 512, 256, 1024, in_stride=2),
+            BottleneckBlock(rngs[9], 1024, 256, 1024),
+            BottleneckBlock(rngs[10], 1024, 256, 1024),
+            BottleneckBlock(rngs[11], 1024, 256, 1024),
+            BottleneckBlock(rngs[12], 1024, 256, 1024),
+            BottleneckBlock(rngs[13], 1024, 256, 1024),
+        ))
 
-        self.head = ResHead(rng, 2048, 1000)
+        self.stage4 = ModuleTuple((
+            BottleneckBlock(rngs[14], 1024, 512, 2048, in_stride=2),
+            BottleneckBlock(rngs[15], 2048, 512, 2048),
+            BottleneckBlock(rngs[16], 2048, 512, 2048),
+        ))
+
+        self.head = ResHead(rngs[17], 2048, out_dim)
     
     def forward(self, x):
         x = self.stem(x)
 
-        x = self.stage1_bt1(x)
-        x = self.stage1_bt2(x)
-        x = self.stage1_bt3(x)
-
-        x = self.stage2_bt1(x)
-        x = self.stage2_bt2(x)
-        x = self.stage2_bt3(x)
-        x = self.stage2_bt4(x)
-
-        x = self.stage3_bt1(x)
-        x = self.stage3_bt2(x)
-        x = self.stage3_bt3(x)
-        x = self.stage3_bt4(x)
-        x = self.stage3_bt5(x)
-        x = self.stage3_bt6(x)
-
-        x = self.stage4_bt1(x)
-        x = self.stage4_bt2(x)
-        x = self.stage4_bt3(x)
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = self.stage4(x)
 
         x = self.head(x)
 
