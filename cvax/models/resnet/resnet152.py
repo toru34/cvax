@@ -40,42 +40,13 @@ class ResNet152(Module):
         ))
 
         self.stage3 = ModuleTuple((
-            BottleneckBlock(next(g), 512, 256, 1024, in_stride=2),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
-            BottleneckBlock(next(g), 1024, 256, 1024),
+            BottleneckBlock(
+                next(g),
+                512 if i==0 else 1024,
+                256,
+                1024,
+                in_stride=2 if i==0 else 1
+            ) for i in range(36)
         ))
 
         self.stage4 = ModuleTuple((
