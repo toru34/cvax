@@ -7,7 +7,10 @@ from PIL import Image
 from cvax import config
 
 class ImageNet:
-    def __init__(self, split: Literal['train', 'val', 'test'], image_size: Union[int, tuple[int, int]]):
+    def __init__(self,
+        split: Literal["train", "val", "test"],
+        image_size: Union[int, tuple[int, int]] = (224, 224)
+        ):
         """
         """
         self.image_paths = []
@@ -19,7 +22,7 @@ class ImageNet:
 
         data_dir = config.DATASET_DIR / f"imagenette2/{split}"
 
-        self.names = sorted([p.stem for p in data_dir.glob('n0*')])
+        self.names = sorted([p.stem for p in data_dir.glob("n0*")])
         self.ids = [id_ for id_ in range(len(self.names))]
         self.id2name = {id_: name for id_, name in enumerate(self.names)}
         
