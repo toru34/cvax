@@ -23,8 +23,8 @@ class DataLoader:
 
             images, labels = zip(*[self.dataset[i] for i in self.indices[self.pointer:self.pointer+self.batch_size]])
             
-            images = np.array(images)
-            labels = np.array(labels)
+            images = np.asarray(images)
+            labels = np.asarray(labels)
 
             self.pointer += self.batch_size
 
