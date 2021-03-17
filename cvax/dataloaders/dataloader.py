@@ -1,22 +1,27 @@
 import numpy as np
 
 class DataLoader:
-    def __init__(self, dataset, batch_size, shuffle):
+    def __init__(self, dataset, batch_size, shuffle=True, seed=34):
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-        self.pointer = 0
+        self.n_samples = len(self.dataset)
+        self.rng = np.random.default_rng(seed=seed)
     
     def __iter__(self):
         self.pointer = 0
-        # TODO: Shuffle dataset
+        if self.shuffle:
+            self.indices = self.rng.permutation(self.n_samples)
+        else:
+            self.indices = np.arange(self.n_samples)
+
         return self
     
     def __next__(self):
-        if self.pointer < len(self.dataset):
+        if self.pointer < self.n_samples:
 
-            images, labels = zip(*[self.dataset[i] for i in range(self.pointer, self.pointer+self.batch_size)])
+            images, labels = zip(*[self.dataset[i] for i in self.indices[self.pointer:self.pointer+self.batch_size]])
             
             images = np.array(images)
             labels = np.array(labels)
