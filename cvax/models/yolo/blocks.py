@@ -1,6 +1,6 @@
 import jax.nn as nn
 
-from nmax.module import Module
+from nmax import Module
 from cvax.modules import Conv2d, BatchNorm2d
 
 class YOLOConvBlock(Module):

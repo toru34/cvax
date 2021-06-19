@@ -18,3 +18,11 @@ class MaxPool2d(Module):
     
     def forward(self, x):
         return jax.lax.reduce_window(x, -jnp.inf, jax.lax.max, window_dimensions=(1, 1, self.kernel_width, self.kernel_width), window_strides=(1, 1, self.stride, self.stride), padding=self.padding) # TODO: Replace padding
+
+
+class AveragePool2d(Module):
+    def __init__(self):
+        pass
+
+    def forward(self, x):
+        return jnp.mean(x, axis=(2, 3), keepdims=True)
