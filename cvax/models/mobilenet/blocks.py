@@ -27,7 +27,7 @@ class MobileBottleneckBlock(Module):
 
         self.conv_in = Conv2d(next(g), kernel_shape=(bt_channels, in_channels, 1, 1), activation=nn.relu6)
         self.depconv = DepthwiseConv2d(next(g), kernel_shape=(bt_channels, 1, 3, 3), stride=stride, activation=nn.relu6)
-        self.conv_out = Conv2d(next(g), kernel_shape=(out_channels, bt_channels, 1, 1), activation=nn.relu6)
+        self.conv_out = Conv2d(next(g), kernel_shape=(out_channels, bt_channels, 1, 1))
 
         self.use_residual = use_residual
     
