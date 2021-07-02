@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from cvax import config
+from cvax.utils import config
 
 class ImageNet:
     def __init__(self,

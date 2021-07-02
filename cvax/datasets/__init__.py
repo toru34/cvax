@@ -1,2 +1,2 @@
 from cvax.datasets.imagenet import ImageNet
-from cvax.datasets.coco import COCO
+from cvax.datasets.coco import COCODataset
