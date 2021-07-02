@@ -5,14 +5,13 @@ from PIL import Image
 class Resize:
     def __init__(
         self,
-        height: int,
-        width: int,
+        size: tuple[int, int],
         keep_aspect_ratio: bool = True,
         pad_value: int = 0
     ):
 
-        self.height = height
-        self.width = width
+        self.height = size[0]
+        self.width = size[1]
 
         self.keep_aspect_ratio = keep_aspect_ratio
         self.pad_value = pad_value
