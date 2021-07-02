@@ -3,7 +3,13 @@ from PIL import Image
 
 
 class Resize:
-    def __init__(self, height, width, keep_aspect_ratio=True, pad_value=0):
+    def __init__(
+        self,
+        height: int,
+        width: int,
+        keep_aspect_ratio: bool = True,
+        pad_value: int = 0
+    ):
 
         self.height = height
         self.width = width
