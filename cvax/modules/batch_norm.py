@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
 from nmax import Parameter, Module
-from cvax import config
+from cvax.utils import config
 
 class BatchNorm2d(Module):
 
