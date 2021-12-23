@@ -13,6 +13,7 @@ class COCODataset:
         self,
         split: Literal['train', 'val', 'test'],
         year: Literal['2014', '2017'],
+        task: Literal['bbox', 'keypoints'],
     ):
 
         self.images = list()
@@ -24,7 +25,13 @@ class COCODataset:
         # TODO: Download dataset
 
         image_dir = config.DATASET_DIR / f'coco/{split}{year}'
-        annotation_path = config.DATASET_DIR / f'coco/annotations/instances_{split}{year}.json'
+
+        if task == 'bbox':
+            annotation_path = config.DATASET_DIR / f"coco/annotations/instances_{split}{year}.json"
+        elif task == 'keypoints':
+            annotation_path = config.DATASET_DIR / f"coco/annotations/person_keypoints_{split}{year}.json"
+        else:
+            raise NotImplementedError
 
         dataset_info = json.load(open(annotation_path, 'r'))
 
@@ -62,6 +69,7 @@ class COCODataset:
                     'xmax': _annotation['bbox'][0] + _annotation['bbox'][2],
                     'ymax': _annotation['bbox'][1] + _annotation['bbox'][3],
                 },
+                'keypoints': np.array(_annotation['keypoints']).reshape(-1, 3),
             }
 
             imageid2annotations[image_id].append(annotation)
